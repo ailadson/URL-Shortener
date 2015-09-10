@@ -26,4 +26,5 @@ class User < ActiveRecord::Base
   )
 
   has_many :visited_urls, through: :visits, source: :visited_url
+
 end

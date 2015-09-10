@@ -1,0 +1,57 @@
+class InputError < StandardError
+
+end
+
+def start
+  email = get_email
+  command = get_command
+  case command
+  when 0
+    long_url = get_url("long")
+    short_url = make_short_url(long_url, email)
+    puts "Here is your short URL: #{short_url}"
+  when 1
+    short_url = get_url("short")
+    launch(email, short_url)
+  end
+end
+
+
+def get_email
+  puts "Input your email"
+  gets.chomp
+end
+
+def get_command
+  puts "What do you want to do?"
+  puts "0. Create shortened URL"
+  puts "1. Visit shortened URL"
+
+  begin
+    command = gets.chomp.to_i
+    raise InputError.new("Please enter 0 or 1 to continue") unless [0,1].include?(command)
+  rescue InputError => e
+    puts e.message
+    retry
+  end
+
+  command
+end
+
+def get_url(type)
+  puts "Type in your #{type} URL"
+  gets.chomp
+end
+
+def launch(email, short_url)
+  url_obj = ShortenedUrl.find_by_short_url(short_url)
+  Visit.create!(visitor_id: User.find_by_email(email).id, short_url_id: url_obj.id)
+  Launchy.open(url_obj.long_url)
+end
+
+def make_short_url(long_url, email)
+  user = User.exists?(email: email) ? User.find_by_email(email) : User.create!(email: email)
+  ShortenedUrl.create_for_user_and_long_url!(user, long_url).short_url
+end
+
+start
